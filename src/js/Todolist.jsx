@@ -1,58 +1,59 @@
 import { useState, useEffect } from "react";
 
-
-
 export const Todolist = () => {
-
     const [tareas, setTareas] = useState([]);
     const [input, setInput] = useState("");
 
-    const API = "https://playground.4geeks.com/todos/user/ironman";
+  
 
-
-    const getTareasFromApi = async () => {
-        const response = await fetch(API);
-        if (response.status === 404) {
-            await createAIronmanInApi();
-            return;
-        }
-
-        const data = await response.json();
-        setTareas(data);
+    const getTareasFromApi = () => {
+        fetch('https://playground.4geeks.com/todo/users/ironman')
+            .then(response => {
+                if (response.status === 404) {
+                    return createAIronmanInApi();
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data) setTareas(data);
+            })
+            .catch(error => console.error("Error al obtener tareas:", error));
     };
 
-    const createAIronmanInApi = async () => {
-        await fetch(API, {
+    const createAIronmanInApi = () => {
+        return fetch('https://playground.4geeks.com/todos/users/ironman', {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify([])
-        });
-        getTareasFromApi();
+        }).then(() => getTareasFromApi());
     };
 
-    const agregarTareaAIronmanInApi = async () => {
+    const agregarTareaAIronmanInApi = () => {
         if (input.trim() === "") return;
 
         const nuevasTareas = [...tareas, { label: input, done: false }];
-        await fetch(API, {
+        fetch('https://playground.4geeks.com/todos/', {
             method: "PUT",
             headers: { "Content-type": "application/json" },
             body: JSON.stringify(nuevasTareas)
-        });
-        setInput("");
-        getTareasFromApi();
-    }
+        })
+            .then(() => {
+                setInput("");
+                getTareasFromApi();
+            })
+            .catch(error => console.error("Error al agregar tarea:", error));
+    };
 
-    const eliminarTarea = async (index) => {
+    const eliminarTarea = (index) => {
         const nuevasTareas = tareas.filter((_, i) => i !== index);
-        await fetch(API, {
-            method: "PUT",
+        fetch('https://playground.4geeks.com/todos/', {
+            method: "DELETE",
             headers: { "Content-type": "application/json" },
             body: JSON.stringify(nuevasTareas)
-        });
-        getTareasFromApi();
-
-    }
+        })
+            .then(() => getTareasFromApi())
+            .catch(error => console.error("Error al eliminar tarea:", error));
+    };
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter") {
@@ -63,15 +64,10 @@ export const Todolist = () => {
 
     useEffect(() => {
         getTareasFromApi();
-
-    },
-        []);
-
-
+    }, []);
 
     return (
         <div className="text-center">
-
             <h1>TAREAS DE SEGUNDO</h1>
             <input
                 value={input}
@@ -80,7 +76,6 @@ export const Todolist = () => {
                 onKeyDown={handleKeyDown}
                 placeholder="Escribir tarea"
             />
-
             {tareas.map((tarea, index) => (
                 <div key={index}>
                     <span>{tarea.label}</span>{" "}
@@ -89,5 +84,4 @@ export const Todolist = () => {
             ))}
         </div>
     );
-
-}
+};
